@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-jetstream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats-jetstream
+  template:
+    metadata:
+      labels:
+        app: nats-jetstream
+    spec:
+      containers:
+        - name: nats-jetstream
+          image: nats:2.10.2
+          args: ["-c", "/etc/nats/nats.conf"]
+          ports:
+            - containerPort: 4222  # NATS client port
+            - containerPort: 8222  # Monitoring port
+          volumeMounts:
+            - name: nats-jetstream-config-volume
+              mountPath: /etc/nats
+            - name: jetstream-storage
+              mountPath: /jetstream/data
+      volumes:
+        - name: nats-jetstream-config-volume
+          configMap:
+            name: nats-jetstream-config
+            items:
+              - key: nats.conf
+                path: nats.conf
+        - name: jetstream-storage
+          emptyDir:
+            medium: Memory  # Use memory instead of disk
